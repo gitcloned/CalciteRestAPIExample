@@ -27,7 +27,7 @@ public class NSESchema extends AbstractSchema {
     public NSESchema(String group) {
         this.group = group;
 
-        NseHTTP nseHttp = new NseHTTP("https://www.nseindia.com/live_market/dynaContent/live_watch/stock_watch/");
+        NseHTTP nseHttp = new NseHTTP("https://www1.nseindia.com/live_market/dynaContent/live_watch/stock_watch/");
 
         this.nse = new NseData(nseHttp);
     }

@@ -25,39 +25,39 @@
       "type": "custom",
       "factory": "org.gitcloned.calcite.adapter.nse.NSESchemaFactory",
       "operand": {
-		"group": "Broad Market Indices"
+        "group": "Broad Market Indices"
       }
     },
-	{
+    {
       "name": "Sectoral",
       "type": "custom",
       "factory": "org.gitcloned.calcite.adapter.nse.NSESchemaFactory",
       "operand": {
-		"group": "Sectoral Indices"
+        "group": "Sectoral Indices"
       }
     },
-	{
+    {
       "name": "Thematic",
       "type": "custom",
       "factory": "org.gitcloned.calcite.adapter.nse.NSESchemaFactory",
       "operand": {
-		"group": "Thematic Indices"
+        "group": "Thematic Indices"
       }
     },
-	{
+    {
       "name": "Strategy",
       "type": "custom",
       "factory": "org.gitcloned.calcite.adapter.nse.NSESchemaFactory",
       "operand": {
-		"group": "Strategy Indices"
+        "group": "Strategy Indices"
       }
     },
-	{
+    {
       "name": "Others",
       "type": "custom",
       "factory": "org.gitcloned.calcite.adapter.nse.NSESchemaFactory",
       "operand": {
-		"group": "Others"
+        "group": "Others"
       }
     }
   ]

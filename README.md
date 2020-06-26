@@ -1,7 +1,7 @@
 
 ## Use JDBC driver to query Rest APIs
 
-This is a simple project which explains the usage of [Apache Calcite](https://calcite.apache.org/) to query [NSE](https://www.nseindia.com/live_market/dynaContent/live_watch/equities_stock_watch.htm) data APIs using JDBC interface. The similar concepts could be used to query any rest API.
+This is a simple project which explains the usage of [Apache Calcite](https://calcite.apache.org/) to query [NSE](https://www1.nseindia.com/live_market/dynaContent/live_watch/equities_stock_watch.htm) data APIs using JDBC interface. The similar concepts could be used to query any rest API.
 
 For detailed explanation, read [blog](https://medium.com/@ashishjain.ash/how-to-create-a-jdbc-driver-over-rest-apis-1571ab156e6a)
 
