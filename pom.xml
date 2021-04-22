@@ -84,7 +84,7 @@
 
     <properties>
         <build.timestamp>${maven.build.timestamp}</build.timestamp>
-        <calcite.version>1.20.0</calcite.version>
+        <calcite.version>1.26.0</calcite.version>
         <avatica.version>1.15.0</avatica.version>
     </properties>
 
