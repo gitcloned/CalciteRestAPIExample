@@ -158,6 +158,17 @@ To list available columns, run `!columns` command:
 
 Next, try SQL queries over data
 
+For example:
+```shell
+!connect jdbc:calcite:model=src/main/resources/model.json admin admin
+```
+```shell
+select "open" from NIFTY_50;
+```
+```shell
+SELECT * FROM "Sectoral"."NIFTY_ENERGY" INNER JOIN "NIFTY_50" ON "Sectoral"."NIFTY_ENERGY"."symbol" = "NIFTY_50"."symbol";
+```
+
 ### Other Details
 
  * Log File: application.log

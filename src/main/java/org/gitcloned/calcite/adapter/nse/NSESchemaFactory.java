@@ -9,8 +9,6 @@ import java.util.Map;
 public class NSESchemaFactory implements SchemaFactory {
 
     public Schema create(SchemaPlus schemaPlus, String s, Map<String, Object> map) {
-
-        NSESchema schema = new NSESchema((String)map.get("group"));
-        return schema;
+        return new NSESchema((String)map.get("group"));
     }
 }

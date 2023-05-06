@@ -1,24 +1,27 @@
 package org.gitcloned.nse;
 
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpResponse;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.gitcloned.nse.http.NseHTTP;
+import org.htmlunit.WebResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class NseData {
 
     Logger logger = LoggerFactory.getLogger(NseData.class);
 
     private final NseHTTP requestBuilder;
+    public String EQUITY_URL;
 
-    public NseData(NseHTTP requestBuilder) {
+    public NseData(String EQUITY_URL, NseHTTP requestBuilder) {
+        this.EQUITY_URL = EQUITY_URL;
         this.requestBuilder = requestBuilder;
     }
 
@@ -26,28 +29,14 @@ public class NseData {
         return requestBuilder;
     }
 
-    private boolean isSuccessfulResponse (int statusCode) {
-
-        if (statusCode - 200 < 0) return false;
-        if (statusCode - 200 >= 100) return false;
-        return true;
-    }
-
     public JsonArray scanTable (String groupName, String tableName) throws IOException, RuntimeException {
+        WebResponse response = this.requestBuilder.sendGetRequest(EQUITY_URL + URLEncoder.encode(tableName, StandardCharsets.UTF_8.toString()));
 
-        StringBuilder api = new StringBuilder("");
-        api.append(tableName);
-        api.append("StockWatch.json");
-
-        HttpRequest request = this.requestBuilder.buildGetRequest(api.toString(), null);
-
-        HttpResponse response = request.execute();
-
-        if (!isSuccessfulResponse(response.getStatusCode())) {
-            throw new RuntimeException("Data Request Failed, status code (" + response.getStatusCode() + "), Response: " + response.parseAsString());
+        if (!NseHTTP.isSuccessfulResponse(response.getStatusCode())) {
+            throw new RuntimeException("Data Request Failed, status code (" + response.getStatusCode() + "), Response: " + response.getStatusMessage());
         }
 
-        String responseString = response.parseAsString();
+        String responseString = response.getContentAsString();
 
         JsonParser parser = new JsonParser();
         JsonElement tree = parser.parse(responseString);
@@ -55,7 +44,7 @@ public class NseData {
         if (tree.isJsonObject()) {
 
             JsonElement rows = tree.getAsJsonObject().get("data");
-            JsonElement time = tree.getAsJsonObject().get("time");
+            JsonElement time = tree.getAsJsonObject().get("timestamp");
 
             if (time.isJsonNull()) {
                 throw new RuntimeException("Data Request Failed: Response is not a valid json, cannot find the 'time' of the data response");
