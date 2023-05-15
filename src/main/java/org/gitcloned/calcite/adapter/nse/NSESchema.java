@@ -1,6 +1,10 @@
 package org.gitcloned.calcite.adapter.nse;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.impl.AbstractSchema;
 import org.gitcloned.nse.NseData;
@@ -8,6 +12,8 @@ import org.gitcloned.nse.http.NseHTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.sql.Connection;
 import java.util.Locale;
 import java.util.Map;
 
@@ -23,13 +29,13 @@ public class NSESchema extends AbstractSchema {
     private Map<String, Table> tableMap;
 
     private final NseData nse;
+    private final String MASTER_SCHEMA_URL = "https://www.nseindia.com/api/equity-master";
 
     public NSESchema(String group) {
         this.group = group;
 
-        NseHTTP nseHttp = new NseHTTP("https://www1.nseindia.com/live_market/dynaContent/live_watch/stock_watch/");
-
-        this.nse = new NseData(nseHttp);
+        NseHTTP nseHttp = new NseHTTP("https://www.nseindia.com", group);
+        this.nse = new NseData("https://www.nseindia.com/api/equity-stockIndices?index=", nseHttp);
     }
 
     public NseData getNseSession() {
@@ -58,67 +64,38 @@ public class NSESchema extends AbstractSchema {
         logger.debug(String.format("getting tables for group: '%s'", this.group));
 
         /**
-         * List all tables under different categories in NSE
+         * List all tables under different categories in NSE from https://www.nseindia.com/api/equity-master
          */
-        if (this.group.equals("Broad Market Indices")) {
+        try {
+            String masterJson = this.nse.getRequestBuilder().sendGetRequest(MASTER_SCHEMA_URL).getContentAsString();
 
-            NSEScannableTable table = (NSEScannableTable) createTable("nifty", "Nifty50");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
+            JsonParser parser = new JsonParser();
+            JsonElement tree = parser.parse(masterJson);
 
-            table = (NSEScannableTable) createTable("juniorNifty", "Nifty Junior");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
+            if (tree.isJsonObject()) {
 
-            table = (NSEScannableTable) createTable("niftyMidcap50", "Nifty Midcap 50");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
+               for(String groupName : ((JsonObject)tree).keySet()) {
+                   if(this.group.equals(groupName)) {
+                       logger.info(String.format("Loading group '%s'", groupName));
+                       JsonElement groupData = ((JsonObject)tree).get(groupName);
+                       if (groupData.isJsonArray()) {
+                           JsonArray group = groupData.getAsJsonArray();
+                           for (JsonElement tableData : group) {
+                               if (tableData.isJsonPrimitive()) {
+                                   String tableName = tableData.getAsString();
+                                   logger.info(String.format("Loading group '%s' table '%s'", groupName, tableName));
 
-            table = (NSEScannableTable) createTable("niftyMidcap150Online", "Nifty Midcap 150");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-
-            table = (NSEScannableTable) createTable("niftySmallcap50Online", "Nifty Smlcap 50");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-
-            table = (NSEScannableTable) createTable("niftySmallcap250Online", "Nifty Smlcap 250");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-        } else if (this.group.equals("Sectoral Indices")) {
-
-            NSEScannableTable table = (NSEScannableTable) createTable("cnxAuto", "Nifty Auto");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-
-            table = (NSEScannableTable) createTable("bankNifty", "Nifty Bank");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-
-            table = (NSEScannableTable) createTable("cnxEnergy", "Nifty Energy");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-
-            table = (NSEScannableTable) createTable("cnxFinance", "Nifty Financial Services");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-
-            table = (NSEScannableTable) createTable("cnxFMCG", "Nifty FMCG");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-
-            table = (NSEScannableTable) createTable("cnxit", "Nifty IT");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-
-            table = (NSEScannableTable) createTable("cnxMetal", "Nifty Metal");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-
-            table = (NSEScannableTable) createTable("cnxPharma", "Nifty Pharma");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-
-            table = (NSEScannableTable) createTable("cnxRealty", "Nifty Realty");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-        } else if (this.group.equals("Thematic Indices")) {
-
-            NSEScannableTable table = (NSEScannableTable) createTable("cnxCommodities", "Nifty Commodities");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-        } else if (this.group.equals("Strategy Indices")) {
-
-            NSEScannableTable table = (NSEScannableTable) createTable("cnxDividendOppt", "Nifty Dividend Opportunities 50");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
-        } else {
-
-            NSEScannableTable table = (NSEScannableTable) createTable("sovGold", "Sovereign Gold Bonds");
-            builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
+                                   NSEScannableTable table = (NSEScannableTable) createTable(tableName, tableName.replace(" ", "_"));
+                                   builder.put(table.getTableName().toUpperCase(Locale.getDefault()), table);
+                               }
+                           }
+                       }
+                   }
+               }
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
         return builder.build();
